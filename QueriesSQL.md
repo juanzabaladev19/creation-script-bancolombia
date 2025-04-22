@@ -6,7 +6,21 @@
 
 **Consulta SQL:**
 ```sql
-
+SELECT 
+    Cliente.id_cliente,
+    Cliente.nombre,
+    COUNT(Cuenta.num_cuenta) AS total_cuentas,
+    SUM(Cuenta.saldo) AS saldo_total
+FROM 
+    Cliente
+JOIN 
+    Cuenta ON Cliente.id_cliente = Cuenta.id_cliente
+GROUP BY 
+    Cliente.id_cliente, Cliente.nombre
+HAVING 
+    COUNT(Cuenta.num_cuenta) > 1
+ORDER BY 
+    saldo_total DESC;
 ```
 
 ## Enunciado 2: Comparativa entre depósitos y retiros por cliente
@@ -15,7 +29,6 @@
 
 **Consulta SQL:**
 ```sql
-
 ```
 
 ## Enunciado 3: Cuentas sin tarjetas asociadas
