@@ -29,6 +29,22 @@ ORDER BY
 
 **Consulta SQL:**
 ```sql
+SELECT 
+    c.id_cliente,
+    c.nombre,
+    (SELECT SUM(t1.monto)
+     FROM Cuenta ct1
+     JOIN Transaccion t1 ON ct1.num_cuenta = t1.num_cuenta
+     WHERE ct1.id_cliente = c.id_cliente AND t1.tipo_transaccion = 'deposito') AS total_depositos,
+     
+    (SELECT SUM(t2.monto)
+     FROM Cuenta ct2
+     JOIN Transaccion t2 ON ct2.num_cuenta = t2.num_cuenta
+     WHERE ct2.id_cliente = c.id_cliente AND t2.tipo_transaccion = 'retiro') AS total_retiros
+FROM 
+    Cliente c
+ORDER BY 
+    total_depositos DESC;
 ```
 
 ## Enunciado 3: Cuentas sin tarjetas asociadas
@@ -37,7 +53,18 @@ ORDER BY
 
 **Consulta SQL:**
 ```sql
-
+SELECT 
+    ct.num_cuenta,
+    ct.id_cliente,
+    c.nombre
+FROM 
+    Cuenta ct
+JOIN 
+    Cliente c ON ct.id_cliente = c.id_cliente
+LEFT JOIN 
+    Tarjeta t ON ct.num_cuenta = t.num_cuenta
+WHERE 
+    t.num_cuenta IS NULL;
 ```
 
 ## Enunciado 4: Análisis de saldos promedio por tipo de cuenta y comportamiento transaccional
@@ -46,7 +73,17 @@ ORDER BY
 
 **Consulta SQL:**
 ```sql
-
+SELECT 
+    ct.tipo_cuenta,
+    AVG(ct.saldo) AS saldo_promedio
+FROM 
+    Cuenta ct
+JOIN 
+    Transaccion t ON ct.num_cuenta = t.num_cuenta
+WHERE 
+    t.fecha >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY 
+    ct.tipo_cuenta;
 ```
 
 ## Enunciado 5: Clientes con transferencias pero sin retiros en cajeros
@@ -55,5 +92,17 @@ ORDER BY
 
 **Consulta SQL:**
 ```sql
-
+SELECT DISTINCT c.id_cliente, c.nombre, c.correo
+FROM Cliente c
+JOIN Cuenta ct ON c.id_cliente = ct.id_cliente
+JOIN Transaccion t ON ct.num_cuenta = t.num_cuenta
+WHERE t.tipo_transaccion = 'transferencia'
+  AND c.id_cliente NOT IN (
+    SELECT c2.id_cliente
+    FROM Cliente c2
+    JOIN Cuenta ct2 ON c2.id_cliente = ct2.id_cliente
+    JOIN Transaccion t2 ON ct2.num_cuenta = t2.num_cuenta
+    JOIN Retiro r ON t2.id_transaccion = r.id_transaccion
+    WHERE r.canal = 'cajero'
+  );
 ```
